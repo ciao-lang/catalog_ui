@@ -46,27 +46,27 @@ github_ciaolang_url := 'https://github.com/ciao-lang'.
 % catalog_bundles(+Filter, ?M): enumerate 
 %   Filter is a list of tags (currently `main` or `other`).
 catalog_bundles(Filter, M) :-
-	all_bundles(M),
-	get_bundle_tags(M, Tags),
-	% Get category from tags
-	( member(min, Tags) -> Category = min
-	; member(main, Tags) -> Category = main
-	; Category = other
-	),
-	% Filter by category (if needed)
-	( member(min, Filter) -> Category = min
-	; member(main, Filter) -> Category = main
-	; member(other, Filter) -> Category = other
-	; true % any category
-	).
+    all_bundles(M),
+    get_bundle_tags(M, Tags),
+    % Get category from tags
+    ( member(min, Tags) -> Category = min
+    ; member(main, Tags) -> Category = main
+    ; Category = other
+    ),
+    % Filter by category (if needed)
+    ( member(min, Filter) -> Category = min
+    ; member(main, Filter) -> Category = main
+    ; member(other, Filter) -> Category = other
+    ; true % any category
+    ).
 
 % TODO: this should not be in the bundle registry!
 all_bundles(Bundle) :- '$bundle_id'(Bundle).
 
 get_bundle_tags(Bundle, Tags) :-
-	( bundle_tags(Bundle, Tags0) -> Tags = Tags0
-	; Tags = []
-	).
+    ( bundle_tags(Bundle, Tags0) -> Tags = Tags0
+    ; Tags = []
+    ).
 
 % ---------------------------------------------------------------------------
 :- doc(section, "Bundle description").
@@ -79,12 +79,12 @@ get_bundle_tags(Bundle, Tags) :-
 %   It currently extracts it from the title of the README.md file.
 %   The predicate fails if no title is found.
 guess_bundle_title(Bundle, Title) :-
-	bundle_main_readme(Bundle, R),
-	file_to_string(R, Str),
-	append("# ", Str2, Str),
-	append(Title0, "\n"||_, Str2),
-	!,
-	Title = Title0.
+    bundle_main_readme(Bundle, R),
+    file_to_string(R, Str),
+    append("# ", Str2, Str),
+    append(Title0, "\n"||_, Str2),
+    !,
+    Title = Title0.
 
 % ---------------------------------------------------------------------------
 :- doc(section, "Bundle README files").
@@ -94,25 +94,25 @@ guess_bundle_title(Bundle, Title) :-
 :- export(bundle_main_readme/2).
 % A README.md or a (generated) README file
 bundle_main_readme(Bundle, R) :-
-	( get_md_readme(Bundle, R0) -> R = R0
-	; get_bundle_readme_source(Bundle, R0),
-	  path_split(R0, _, R1),
-	  atom_concat('README', _, R1) -> % TODO: kludge
-	    R = R0
-	; fail
-	).
+    ( get_md_readme(Bundle, R0) -> R = R0
+    ; get_bundle_readme_source(Bundle, R0),
+      path_split(R0, _, R1),
+      atom_concat('README', _, R1) -> % TODO: kludge
+        R = R0
+    ; fail
+    ).
 
 :- export(bundle_readme/2).
 % Enumerate (markdown or plaintext) README files
 bundle_readme(Bundle, R) :-
-	( get_md_readme(Bundle, R)
-	; get_bundle_readme_source(Bundle, R)
-	).
+    ( get_md_readme(Bundle, R)
+    ; get_bundle_readme_source(Bundle, R)
+    ).
 
 % A README.md file at the base of the bundle
 get_md_readme(Bundle, R) :-
-	bundle_path(Bundle, 'README.md', R),
-	file_exists(R).
+    bundle_path(Bundle, 'README.md', R),
+    file_exists(R).
 
 % ---------------------------------------------------------------------------
 :- doc(section, "Bundle URLs at GitHub clone").
@@ -121,68 +121,68 @@ get_md_readme(Bundle, R) :-
 % github_bundle_url(+Bundle, +RelPath, ?HRef): URL for the given
 %   source at the GitHub repository.
 github_bundle_url(Bundle, RelPath, HRef) :-
-	bundle_monorepo(Bundle, MonoRepo, MonoPath),
-	!,
-	( RelPath = '.' -> RelPath2 = RelPath % TODO: OK? point to mono repo
-	; path_concat(MonoPath, RelPath, RelPath2)
-	),
-	github_repo_url(MonoRepo, RelPath2, HRef).
+    bundle_monorepo(Bundle, MonoRepo, MonoPath),
+    !,
+    ( RelPath = '.' -> RelPath2 = RelPath % TODO: OK? point to mono repo
+    ; path_concat(MonoPath, RelPath, RelPath2)
+    ),
+    github_repo_url(MonoRepo, RelPath2, HRef).
 github_bundle_url(Bundle, RelPath, HRef) :-
-	github_repo_url(Bundle, RelPath, HRef).
+    github_repo_url(Bundle, RelPath, HRef).
 
 github_repo_url(Repo, '.', HRef) :- !,
-	HRef = ~path_concat(~github_ciaolang_url, Repo).
+    HRef = ~path_concat(~github_ciaolang_url, Repo).
 github_repo_url(Repo, RelPath, HRef) :-
-	HRef0 = ~path_concat(~github_ciaolang_url, Repo),
-	HRef1 = ~path_concat(HRef0, 'tree/master'),
-	HRef = ~path_concat(HRef1, RelPath).
+    HRef0 = ~path_concat(~github_ciaolang_url, Repo),
+    HRef1 = ~path_concat(HRef0, 'tree/master'),
+    HRef = ~path_concat(HRef1, RelPath).
 
 % ---------------------------------------------------------------------------
 :- doc(section, "Bundle contents").
 
 :- use_module(lpdoc(autodoc_lookup), [
-	get_bundle_readme_source/2,
-	get_bundle_manual_source/2]).
+    get_bundle_readme_source/2,
+    get_bundle_manual_source/2]).
 
 :- export(bundle_doc_source/2).
 % Enumerate documentation source files
 bundle_doc_source(Bundle, Path) :-
-	( bundle_readme(Bundle, Path)
-	; get_bundle_manual_source(Bundle, Path)
-	).
+    ( bundle_readme(Bundle, Path)
+    ; get_bundle_manual_source(Bundle, Path)
+    ).
 
 % ---------------------------------------------------------------------------
 :- doc(section, "Dependencies of a bundle").
 
 :- use_module(ciaobld(manifest_compiler), [
-	ensure_load_manifest/1, manifest_call/2]).
+    ensure_load_manifest/1, manifest_call/2]).
 :- use_module(lpdoc(autodoc_lookup), [bundle_manual_htmldir/2]).
 
 :- use_module(library(pathnames),
-	[path_concat/3, path_relocate/4, path_split/3, path_splitext/3]).
+    [path_concat/3, path_relocate/4, path_split/3, path_splitext/3]).
 
 :- export(bundle_deps/2).
 bundle_deps(Bundle, Dep) :-
-	ensure_load_manifest(Bundle),
-	manifest_call(Bundle, dep(Dep0, _)),
-	\+ implicit_dep(Dep0),
-	Dep = Dep0.
+    ensure_load_manifest(Bundle),
+    manifest_call(Bundle, dep(Dep0, _)),
+    \+ implicit_dep(Dep0),
+    Dep = Dep0.
 
 :- export(bundle_manuals/3).
 bundle_manuals(Bundle, Name, HRef) :-
-	% (calls ensure_load_manifest/1)
-	bundle_manual_htmldir(Bundle, Path),
-	% Name of manual (no extension, dir, etc.)
-	path_split(Path, _, Name0),
-	path_splitext(Name0, Name, _),
-	% Obtain relative URL
-	BuildDirDoc = ~bundle_path(Bundle, builddir, 'doc'),
-	path_relocate(BuildDirDoc, '', Path, HRef).
+    % (calls ensure_load_manifest/1)
+    bundle_manual_htmldir(Bundle, Path),
+    % Name of manual (no extension, dir, etc.)
+    path_split(Path, _, Name0),
+    path_splitext(Name0, Name, _),
+    % Obtain relative URL
+    BuildDirDoc = ~bundle_path(Bundle, builddir, 'doc'),
+    path_relocate(BuildDirDoc, '', Path, HRef).
 
 :- export(bundle_url/2).
 % TODO: Not all bundles are in github!
 bundle_url(Bundle) := HRef :- !,
-	github_bundle_url(Bundle, '.', HRef).
+    github_bundle_url(Bundle, '.', HRef).
 
 % ---------------------------------------------------------------------------
 % Reverse dependencies
@@ -193,23 +193,23 @@ bundle_url(Bundle) := HRef :- !,
 
 :- export(bundle_revdeps/2).
 bundle_revdeps(Bundle, RevDep) :-
-	ensure_revdeps,
-	bundle_revdeps_(Bundle, RevDep).
+    ensure_revdeps,
+    bundle_revdeps_(Bundle, RevDep).
 
 ensure_revdeps :-
-	( bundle_revdeps_computed -> true
-	; compute_revdeps
-	).
+    ( bundle_revdeps_computed -> true
+    ; compute_revdeps
+    ).
 
 compute_revdeps :-
-	retractall_fact(bundle_revdeps_(_,_)),
-	( catalog_bundles([], A),
-	    bundle_deps(A, Dep),
-	    \+ implicit_dep(Dep),
-	    ( current_fact(bundle_revdeps_(Dep, A)) -> true
-	    ; assertz_fact(bundle_revdeps_(Dep, A))
-	    ),
-	    fail
-	; true
-	),
-	set_fact(bundle_revdeps_computed).
+    retractall_fact(bundle_revdeps_(_,_)),
+    ( catalog_bundles([], A),
+        bundle_deps(A, Dep),
+        \+ implicit_dep(Dep),
+        ( current_fact(bundle_revdeps_(Dep, A)) -> true
+        ; assertz_fact(bundle_revdeps_(Dep, A))
+        ),
+        fail
+    ; true
+    ),
+    set_fact(bundle_revdeps_computed).

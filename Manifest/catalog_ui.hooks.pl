@@ -8,9 +8,9 @@
 :- use_module(ciaobld(builder_aux), [update_file_from_clauses/3]).
 
 '$builder_hook'(prepare_build_bin) :-
-	ConfigFile = ~bundle_path(catalog_ui, 'src/catalog_ui_config_auto.pl'),
-	update_file_from_clauses(~findall(C, emit_config(C)), ConfigFile, _).
+    ConfigFile = ~bundle_path(catalog_ui, 'src/catalog_ui_config_auto.pl'),
+    update_file_from_clauses(~findall(C, emit_config(C)), ConfigFile, _).
 
 emit_config(C) :-
-	'$bundle_id'(ciaoviz),
-	C = (:- compilation_fact(has_ciaoviz)).
+    '$bundle_id'(ciaoviz),
+    C = (:- compilation_fact(has_ciaoviz)).
